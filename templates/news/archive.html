@@ -1,0 +1,205 @@
+{% extends 'news/base.html' %}
+
+{% block title %}Archive - News Portal{% endblock %}
+
+{% block content %}
+<!-- Archive Header -->
+<div class="bg-white shadow-sm mb-8">
+    <div class="container mx-auto px-4 py-8">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-4xl font-bold text-gray-900 mb-4">
+                    <i class="fas fa-archive text-blue-500 mr-3"></i>Article Archive
+                </h1>
+                {% if year and month %}
+                <p class="text-lg text-gray-600">Articles from {{ month_name }} {{ year }}</p>
+                {% elif year %}
+                <p class="text-lg text-gray-600">Articles from {{ year }}</p>
+                {% else %}
+                <p class="text-lg text-gray-600">Browse articles by date</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Date Filters -->
+        <div class="mt-6">
+            <div class="flex flex-wrap items-center space-x-4">
+                <span class="text-gray-700 font-medium">Filter by:</span>
+                
+                <!-- Year Filter -->
+                <select onchange="location = this.value;" class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <option value="{% url 'news:archive' %}">All Years</option>
+                    {% for archive_year in available_years %}
+                    <option value="?year={{ archive_year.year }}" 
+                            {% if archive_year.year|stringformat:"s" == year %}selected{% endif %}>
+                        {{ archive_year.year }} ({{ archive_year.count }} articles)
+                    </option>
+                    {% endfor %}
+                </select>
+                
+                {% if year %}
+                <!-- Month Filter -->
+                <select onchange="location = this.value;" class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <option value="?year={{ year }}">All Months</option>
+                    {% for archive_month in available_months %}
+                    <option value="?year={{ year }}&month={{ archive_month.month }}" 
+                            {% if archive_month.month|stringformat:"s" == month %}selected{% endif %}>
+                        {{ archive_month.month_name }} ({{ archive_month.count }} articles)
+                    </option>
+                    {% endfor %}
+                </select>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Articles List -->
+<div class="container mx-auto px-4">
+    {% if articles %}
+    <div class="space-y-6 mb-12">
+        {% for article in articles %}
+        <article class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition duration-200">
+            <div class="flex flex-col md:flex-row">
+                <!-- Article Image -->
+                {% if article.featured_image %}
+                <div class="md:w-48 md:flex-shrink-0 mb-4 md:mb-0 md:mr-6">
+                    <img src="{{ article.featured_image.url }}" alt="{{ article.title }}" class="w-full h-32 md:h-full object-cover rounded-lg">
+                </div>
+                {% endif %}
+                
+                <!-- Article Content -->
+                <div class="flex-1">
+                    <!-- Article Meta -->
+                    <div class="flex items-center text-sm text-gray-600 mb-2">
+                        <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
+                            {{ article.category.name }}
+                        </span>
+                        <span class="mx-2">•</span>
+                        <span><i class="far fa-calendar mr-1"></i>{{ article.created_at|date:"F d, Y" }}</span>
+                        <span class="mx-2">•</span>
+                        <span><i class="far fa-eye mr-1"></i>{{ article.views_count }} views</span>
+                        {% if article.is_featured %}
+                        <span class="ml-2">
+                            <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium">
+                                <i class="fas fa-star mr-1"></i>Featured
+                            </span>
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Article Title -->
+                    <h2 class="text-xl font-semibold text-gray-900 mb-3">
+                        <a href="{% url 'news:article_detail' slug=article.slug %}" class="hover:text-blue-600 transition duration-200">
+                            {{ article.title }}
+                        </a>
+                    </h2>
+
+                    <!-- Article Excerpt -->
+                    {% if article.excerpt %}
+                    <p class="text-gray-600 mb-4">{{ article.excerpt|truncatewords:30 }}</p>
+                    {% endif %}
+
+                    <!-- Article Footer -->
+                    <div class="flex items-center justify-between">
+                        <div class="text-sm text-gray-500">
+                            By {{ article.author.get_full_name|default:article.author.username }}
+                        </div>
+                        <a href="{% url 'news:article_detail' slug=article.slug %}" 
+                           class="text-blue-600 hover:text-blue-800 font-medium text-sm">
+                            Read Article <i class="fas fa-arrow-right ml-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <div class="flex justify-center mb-12">
+        <nav class="flex items-center space-x-2">
+            {% if page_obj.has_previous %}
+            <a href="?{% if year %}year={{ year }}&{% endif %}{% if month %}month={{ month }}&{% endif %}page=1" 
+               class="px-3 py-2 rounded-lg bg-white border border-gray-300 text-gray-500 hover:text-gray-700 hover:border-gray-400">
+                First
+            </a>
+            <a href="?{% if year %}year={{ year }}&{% endif %}{% if month %}month={{ month }}&{% endif %}page={{ page_obj.previous_page_number }}" 
+               class="px-3 py-2 rounded-lg bg-white border border-gray-300 text-gray-500 hover:text-gray-700 hover:border-gray-400">
+                <i class="fas fa-chevron-left"></i>
+            </a>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+            <span class="px-3 py-2 rounded-lg bg-blue-600 text-white">{{ num }}</span>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+            <a href="?{% if year %}year={{ year }}&{% endif %}{% if month %}month={{ month }}&{% endif %}page={{ num }}" 
+               class="px-3 py-2 rounded-lg bg-white border border-gray-300 text-gray-500 hover:text-gray-700 hover:border-gray-400">{{ num }}</a>
+            {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+            <a href="?{% if year %}year={{ year }}&{% endif %}{% if month %}month={{ month }}&{% endif %}page={{ page_obj.next_page_number }}" 
+               class="px-3 py-2 rounded-lg bg-white border border-gray-300 text-gray-500 hover:text-gray-700 hover:border-gray-400">
+                <i class="fas fa-chevron-right"></i>
+            </a>
+            <a href="?{% if year %}year={{ year }}&{% endif %}{% if month %}month={{ month }}&{% endif %}page={{ page_obj.paginator.num_pages }}" 
+               class="px-3 py-2 rounded-lg bg-white border border-gray-300 text-gray-500 hover:text-gray-700 hover:border-gray-400">
+                Last
+            </a>
+            {% endif %}
+        </nav>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <!-- No Articles Found -->
+    <div class="text-center py-16">
+        <div class="max-w-md mx-auto">
+            <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <i class="fas fa-archive text-gray-400 text-3xl"></i>
+            </div>
+            <h2 class="text-2xl font-semibold text-gray-900 mb-4">No Articles Found</h2>
+            <p class="text-gray-600 mb-8">
+                {% if year and month %}
+                No articles were published in {{ month_name }} {{ year }}.
+                {% elif year %}
+                No articles were published in {{ year }}.
+                {% else %}
+                No articles found in the archive.
+                {% endif %}
+            </p>
+            <a href="{% url 'news:home' %}" 
+               class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition duration-200">
+                <i class="fas fa-home mr-2"></i>Back to Home
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Statistics -->
+<div class="bg-gray-100 py-12 mt-16">
+    <div class="container mx-auto px-4">
+        <div class="max-w-4xl mx-auto">
+            <h2 class="text-2xl font-bold text-gray-900 mb-8 text-center">Archive Statistics</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white rounded-lg p-6 text-center">
+                    <div class="text-3xl font-bold text-blue-600 mb-2">{{ total_articles }}</div>
+                    <div class="text-gray-600">Total Articles</div>
+                </div>
+                <div class="bg-white rounded-lg p-6 text-center">
+                    <div class="text-3xl font-bold text-green-600 mb-2">{{ available_years.count }}</div>
+                    <div class="text-gray-600">Years of Content</div>
+                </div>
+                <div class="bg-white rounded-lg p-6 text-center">
+                    <div class="text-3xl font-bold text-purple-600 mb-2">{{ categories.count }}</div>
+                    <div class="text-gray-600">Categories</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

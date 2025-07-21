@@ -1,0 +1,192 @@
+{% extends 'news/base.html' %}
+
+{% block title %}{% if query %}Search results for "{{ query }}"{% else %}Search{% endif %} - News Portal{% endblock %}
+
+{% block content %}
+<!-- Search Header -->
+<div class="bg-white shadow-sm mb-8">
+    <div class="container mx-auto px-4 py-8">
+        <div class="max-w-2xl mx-auto">
+            {% if query %}
+            <h1 class="text-3xl font-bold text-gray-900 mb-4">
+                Search Results for "{{ query }}"
+            </h1>
+            <p class="text-lg text-gray-600 mb-6">
+                {% if articles %}
+                    Found {{ articles.paginator.count }} result{{ articles.paginator.count|pluralize }}
+                {% else %}
+                    No results found
+                {% endif %}
+            </p>
+            {% else %}
+            <h1 class="text-3xl font-bold text-gray-900 mb-4">Search Articles</h1>
+            <p class="text-lg text-gray-600 mb-6">Find articles by keywords, title, or content</p>
+            {% endif %}
+            
+            <!-- Search Form -->
+            <form method="get" class="mb-6">
+                <div class="flex">
+                    <input type="text" 
+                           name="q" 
+                           value="{{ query|default:'' }}" 
+                           placeholder="Search for articles..." 
+                           class="flex-1 px-4 py-3 border border-gray-300 rounded-l-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <button type="submit" 
+                            class="px-6 py-3 bg-blue-600 text-white rounded-r-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Search Results -->
+<div class="container mx-auto px-4">
+    {% if query %}
+        {% if articles %}
+        <!-- Results Grid -->
+        <div class="space-y-6 mb-12">
+            {% for article in articles %}
+            <article class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition duration-200">
+                <div class="flex flex-col md:flex-row">
+                    <!-- Article Image -->
+                    {% if article.featured_image %}
+                    <div class="md:w-48 md:flex-shrink-0 mb-4 md:mb-0 md:mr-6">
+                        <img src="{{ article.featured_image.url }}" alt="{{ article.title }}" class="w-full h-32 md:h-full object-cover rounded-lg">
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Article Content -->
+                    <div class="flex-1">
+                        <!-- Article Meta -->
+                        <div class="flex items-center text-sm text-gray-600 mb-2">
+                            <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
+                                {{ article.category.name }}
+                            </span>
+                            <span class="mx-2">•</span>
+                            <span>{{ article.created_at|date:"M d, Y" }}</span>
+                            <span class="mx-2">•</span>
+                            <span><i class="far fa-eye mr-1"></i>{{ article.views_count }} views</span>
+                        </div>
+
+                        <!-- Article Title -->
+                        <h2 class="text-xl font-semibold text-gray-900 mb-3">
+                            <a href="{% url 'news:article_detail' slug=article.slug %}" class="hover:text-blue-600 transition duration-200">
+                                {{ article.title }}
+                            </a>
+                        </h2>
+
+                        <!-- Article Excerpt -->
+                        {% if article.excerpt %}
+                        <p class="text-gray-600 mb-4">{{ article.excerpt|truncatewords:30 }}</p>
+                        {% endif %}
+
+                        <!-- Article Footer -->
+                        <div class="flex items-center justify-between">
+                            <div class="text-sm text-gray-500">
+                                By {{ article.author.get_full_name|default:article.author.username }}
+                            </div>
+                            <a href="{% url 'news:article_detail' slug=article.slug %}" 
+                               class="text-blue-600 hover:text-blue-800 font-medium text-sm">
+                                Read Full Article <i class="fas fa-arrow-right ml-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if is_paginated %}
+        <div class="flex justify-center mb-12">
+            <nav class="flex items-center space-x-2">
+                {% if page_obj.has_previous %}
+                <a href="?q={{ query }}&page=1" class="px-3 py-2 rounded-lg bg-white border border-gray-300 text-gray-500 hover:text-gray-700 hover:border-gray-400">
+                    First
+                </a>
+                <a href="?q={{ query }}&page={{ page_obj.previous_page_number }}" class="px-3 py-2 rounded-lg bg-white border border-gray-300 text-gray-500 hover:text-gray-700 hover:border-gray-400">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                <span class="px-3 py-2 rounded-lg bg-blue-600 text-white">{{ num }}</span>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                <a href="?q={{ query }}&page={{ num }}" class="px-3 py-2 rounded-lg bg-white border border-gray-300 text-gray-500 hover:text-gray-700 hover:border-gray-400">{{ num }}</a>
+                {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                <a href="?q={{ query }}&page={{ page_obj.next_page_number }}" class="px-3 py-2 rounded-lg bg-white border border-gray-300 text-gray-500 hover:text-gray-700 hover:border-gray-400">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+                <a href="?q={{ query }}&page={{ page_obj.paginator.num_pages }}" class="px-3 py-2 rounded-lg bg-white border border-gray-300 text-gray-500 hover:text-gray-700 hover:border-gray-400">
+                    Last
+                </a>
+                {% endif %}
+            </nav>
+        </div>
+        {% endif %}
+
+        {% else %}
+        <!-- No Results -->
+        <div class="text-center py-16">
+            <div class="max-w-md mx-auto">
+                <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-search text-gray-400 text-3xl"></i>
+                </div>
+                <h2 class="text-2xl font-semibold text-gray-900 mb-4">No Results Found</h2>
+                <p class="text-gray-600 mb-8">
+                    We couldn't find any articles matching "{{ query }}". 
+                    Try different keywords or check your spelling.
+                </p>
+                <div class="space-y-4">
+                    <p class="text-sm text-gray-500">Suggestions:</p>
+                    <ul class="text-sm text-gray-600 space-y-1">
+                        <li>• Try more general keywords</li>
+                        <li>• Check for typos in your search</li>
+                        <li>• Use fewer keywords</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    
+    {% else %}
+    <!-- Search Landing -->
+    <div class="text-center py-16">
+        <div class="max-w-md mx-auto">
+            <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <i class="fas fa-search text-gray-400 text-3xl"></i>
+            </div>
+            <h2 class="text-2xl font-semibold text-gray-900 mb-4">Start Your Search</h2>
+            <p class="text-gray-600 mb-8">
+                Enter keywords above to find articles on topics you're interested in.
+            </p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Popular Searches -->
+{% if not query %}
+<div class="bg-gray-100 py-12 mt-16">
+    <div class="container mx-auto px-4">
+        <div class="max-w-4xl mx-auto text-center">
+            <h2 class="text-2xl font-bold text-gray-900 mb-8">Popular Topics</h2>
+            <div class="flex flex-wrap justify-center gap-3">
+                {% for category in categories %}
+                <a href="{% url 'news:category_articles' slug=category.slug %}" 
+                   class="bg-white text-gray-700 px-4 py-2 rounded-full hover:bg-blue-50 hover:text-blue-600 transition duration-200">
+                    {{ category.name }}
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

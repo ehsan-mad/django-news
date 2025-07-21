@@ -1,0 +1,163 @@
+{% extends 'news/base.html' %}
+
+{% block title %}Trending Articles - News Portal{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="bg-white shadow-sm mb-8">
+    <div class="container mx-auto px-4 py-8">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-4xl font-bold text-gray-900 mb-4">
+                    <i class="fas fa-fire text-orange-500 mr-3"></i>Trending Articles
+                </h1>
+                <p class="text-lg text-gray-600">Most popular articles from the last {{ days }} day{{ days|pluralize }}</p>
+            </div>
+            
+            <!-- Time Filter -->
+            <div class="flex space-x-2">
+                <a href="?days=1" class="px-4 py-2 rounded-lg {% if days == 1 %}bg-blue-600 text-white{% else %}bg-gray-200 text-gray-700 hover:bg-gray-300{% endif %}">
+                    Today
+                </a>
+                <a href="?days=7" class="px-4 py-2 rounded-lg {% if days == 7 %}bg-blue-600 text-white{% else %}bg-gray-200 text-gray-700 hover:bg-gray-300{% endif %}">
+                    This Week
+                </a>
+                <a href="?days=30" class="px-4 py-2 rounded-lg {% if days == 30 %}bg-blue-600 text-white{% else %}bg-gray-200 text-gray-700 hover:bg-gray-300{% endif %}">
+                    This Month
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Articles Grid -->
+<div class="container mx-auto px-4">
+    {% if articles %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+        {% for article in articles %}
+        <article class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition duration-200">
+            <!-- Trending Badge -->
+            <div class="relative">
+                {% if article.featured_image %}
+                <img src="{{ article.featured_image.url }}" alt="{{ article.title }}" class="w-full h-48 object-cover">
+                {% else %}
+                <div class="w-full h-48 bg-gradient-to-br from-orange-100 to-red-200 flex items-center justify-center">
+                    <i class="fas fa-fire text-orange-400 text-3xl"></i>
+                </div>
+                {% endif %}
+                <div class="absolute top-4 left-4">
+                    <span class="bg-orange-500 text-white px-3 py-1 rounded-full text-sm font-medium">
+                        <i class="fas fa-fire mr-1"></i>
+                        {{ article.views_count }} views
+                    </span>
+                </div>
+            </div>
+            
+            <div class="p-6">
+                <!-- Article Meta -->
+                <div class="flex items-center justify-between text-sm text-gray-600 mb-3">
+                    <div class="flex items-center space-x-2">
+                        <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
+                            {{ article.category.name }}
+                        </span>
+                        <span>•</span>
+                        <span>{{ article.created_at|date:"M d, Y" }}</span>
+                    </div>
+                </div>
+
+                <!-- Article Title -->
+                <h2 class="text-xl font-semibold text-gray-900 mb-3 line-clamp-2">
+                    <a href="{% url 'news:article_detail' slug=article.slug %}" class="hover:text-blue-600 transition duration-200">
+                        {{ article.title }}
+                    </a>
+                </h2>
+
+                <!-- Article Excerpt -->
+                {% if article.excerpt %}
+                <p class="text-gray-600 mb-4 line-clamp-3">{{ article.excerpt|truncatewords:25 }}</p>
+                {% endif %}
+
+                <!-- Article Footer -->
+                <div class="flex items-center justify-between">
+                    <div class="text-sm text-gray-500">
+                        By {{ article.author.get_full_name|default:article.author.username }}
+                    </div>
+                    <a href="{% url 'news:article_detail' slug=article.slug %}" 
+                       class="text-blue-600 hover:text-blue-800 font-medium text-sm">
+                        Read More <i class="fas fa-arrow-right ml-1"></i>
+                    </a>
+                </div>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <div class="flex justify-center mb-12">
+        <nav class="flex items-center space-x-2">
+            {% if page_obj.has_previous %}
+            <a href="?page=1&days={{ days }}" class="px-3 py-2 rounded-lg bg-white border border-gray-300 text-gray-500 hover:text-gray-700 hover:border-gray-400">
+                First
+            </a>
+            <a href="?page={{ page_obj.previous_page_number }}&days={{ days }}" class="px-3 py-2 rounded-lg bg-white border border-gray-300 text-gray-500 hover:text-gray-700 hover:border-gray-400">
+                <i class="fas fa-chevron-left"></i>
+            </a>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+            <span class="px-3 py-2 rounded-lg bg-blue-600 text-white">{{ num }}</span>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+            <a href="?page={{ num }}&days={{ days }}" class="px-3 py-2 rounded-lg bg-white border border-gray-300 text-gray-500 hover:text-gray-700 hover:border-gray-400">{{ num }}</a>
+            {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}&days={{ days }}" class="px-3 py-2 rounded-lg bg-white border border-gray-300 text-gray-500 hover:text-gray-700 hover:border-gray-400">
+                <i class="fas fa-chevron-right"></i>
+            </a>
+            <a href="?page={{ page_obj.paginator.num_pages }}&days={{ days }}" class="px-3 py-2 rounded-lg bg-white border border-gray-300 text-gray-500 hover:text-gray-700 hover:border-gray-400">
+                Last
+            </a>
+            {% endif %}
+        </nav>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <!-- No Articles Found -->
+    <div class="text-center py-16">
+        <div class="max-w-md mx-auto">
+            <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <i class="fas fa-fire text-gray-400 text-3xl"></i>
+            </div>
+            <h2 class="text-2xl font-semibold text-gray-900 mb-4">No Trending Articles</h2>
+            <p class="text-gray-600 mb-8">
+                No articles have gained significant traction in the last {{ days }} day{{ days|pluralize }}.
+                Check back later or try a different time range!
+            </p>
+            <a href="{% url 'news:home' %}" 
+               class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition duration-200">
+                <i class="fas fa-home mr-2"></i>Back to Home
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+</style>
+{% endblock %}

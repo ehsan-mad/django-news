@@ -1,0 +1,176 @@
+{% extends 'news/base.html' %}
+
+{% block title %}{{ category.name }} News - News Portal{% endblock %}
+
+{% block extra_head %}
+<meta name="description" content="{{ category.description|default:'Latest news and articles in '|add:category.name }}">
+{% endblock %}
+
+{% block content %}
+<!-- Category Header -->
+<div class="bg-white shadow-sm mb-8">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Breadcrumb -->
+        <nav class="mb-6">
+            <div class="flex items-center space-x-2 text-sm text-gray-600">
+                <a href="{% url 'news:home' %}" class="hover:text-blue-600">Home</a>
+                <span>/</span>
+                <span class="text-gray-900">{{ category.name }}</span>
+            </div>
+        </nav>
+
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-4xl font-bold text-gray-900 mb-4">{{ category.name }}</h1>
+                {% if category.description %}
+                <p class="text-lg text-gray-600 mb-4">{{ category.description }}</p>
+                {% endif %}
+                <div class="text-sm text-gray-500">
+                    {{ articles.count }} article{{ articles.count|pluralize }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Articles Grid -->
+<div class="container mx-auto px-4">
+    {% if articles %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+        {% for article in articles %}
+        <article class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition duration-200">
+            {% if article.featured_image %}
+            <img src="{{ article.featured_image.url }}" alt="{{ article.title }}" class="w-full h-48 object-cover">
+            {% else %}
+            <div class="w-full h-48 bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center">
+                <i class="fas fa-newspaper text-blue-400 text-3xl"></i>
+            </div>
+            {% endif %}
+            
+            <div class="p-6">
+                <!-- Article Meta -->
+                <div class="flex items-center justify-between text-sm text-gray-600 mb-3">
+                    <div class="flex items-center space-x-2">
+                        <span><i class="far fa-calendar mr-1"></i>{{ article.created_at|date:"M d, Y" }}</span>
+                        <span>•</span>
+                        <span><i class="far fa-eye mr-1"></i>{{ article.views_count }}</span>
+                    </div>
+                    {% if article.is_featured %}
+                    <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium">
+                        <i class="fas fa-star mr-1"></i>Featured
+                    </span>
+                    {% endif %}
+                </div>
+
+                <!-- Article Title -->
+                <h2 class="text-xl font-semibold text-gray-900 mb-3 line-clamp-2">
+                    <a href="{% url 'news:article_detail' slug=article.slug %}" class="hover:text-blue-600 transition duration-200">
+                        {{ article.title }}
+                    </a>
+                </h2>
+
+                <!-- Article Excerpt -->
+                {% if article.excerpt %}
+                <p class="text-gray-600 mb-4 line-clamp-3">{{ article.excerpt|truncatewords:25 }}</p>
+                {% endif %}
+
+                <!-- Article Footer -->
+                <div class="flex items-center justify-between">
+                    <div class="text-sm text-gray-500">
+                        By {{ article.author.get_full_name|default:article.author.username }}
+                    </div>
+                    <a href="{% url 'news:article_detail' slug=article.slug %}" 
+                       class="text-blue-600 hover:text-blue-800 font-medium text-sm">
+                        Read More <i class="fas fa-arrow-right ml-1"></i>
+                    </a>
+                </div>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <div class="flex justify-center mb-12">
+        <nav class="flex items-center space-x-2">
+            {% if page_obj.has_previous %}
+            <a href="?page=1" class="px-3 py-2 rounded-lg bg-white border border-gray-300 text-gray-500 hover:text-gray-700 hover:border-gray-400">
+                First
+            </a>
+            <a href="?page={{ page_obj.previous_page_number }}" class="px-3 py-2 rounded-lg bg-white border border-gray-300 text-gray-500 hover:text-gray-700 hover:border-gray-400">
+                <i class="fas fa-chevron-left"></i>
+            </a>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+            <span class="px-3 py-2 rounded-lg bg-blue-600 text-white">{{ num }}</span>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+            <a href="?page={{ num }}" class="px-3 py-2 rounded-lg bg-white border border-gray-300 text-gray-500 hover:text-gray-700 hover:border-gray-400">{{ num }}</a>
+            {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}" class="px-3 py-2 rounded-lg bg-white border border-gray-300 text-gray-500 hover:text-gray-700 hover:border-gray-400">
+                <i class="fas fa-chevron-right"></i>
+            </a>
+            <a href="?page={{ page_obj.paginator.num_pages }}" class="px-3 py-2 rounded-lg bg-white border border-gray-300 text-gray-500 hover:text-gray-700 hover:border-gray-400">
+                Last
+            </a>
+            {% endif %}
+        </nav>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <!-- No Articles Found -->
+    <div class="text-center py-16">
+        <div class="max-w-md mx-auto">
+            <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <i class="fas fa-newspaper text-gray-400 text-3xl"></i>
+            </div>
+            <h2 class="text-2xl font-semibold text-gray-900 mb-4">No Articles Found</h2>
+            <p class="text-gray-600 mb-8">
+                There are no published articles in the {{ category.name }} category yet. 
+                Check back later for new content!
+            </p>
+            <a href="{% url 'news:home' %}" 
+               class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition duration-200">
+                <i class="fas fa-home mr-2"></i>Back to Home
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Related Categories -->
+<div class="bg-gray-100 py-12 mt-16">
+    <div class="container mx-auto px-4">
+        <h2 class="text-2xl font-bold text-gray-900 mb-8 text-center">Explore Other Categories</h2>
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            {% for other_category in other_categories %}
+            <a href="{% url 'news:category_articles' slug=other_category.slug %}" 
+               class="bg-white rounded-lg p-4 text-center hover:shadow-md transition duration-200 {% if other_category == category %}opacity-50 pointer-events-none{% endif %}">
+                <h3 class="font-semibold text-gray-900 mb-1">{{ other_category.name }}</h3>
+                <p class="text-sm text-gray-600">{{ other_category.articles.count }} articles</p>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<style>
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+</style>
+{% endblock %}
