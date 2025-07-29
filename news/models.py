@@ -52,6 +52,7 @@ class Article(models.Model):
     show_breaking_image = models.BooleanField(default=False, help_text="Enable this option to display the article's image in the breaking news banner. If unchecked, only the text will be shown.")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    update_date = models.DateTimeField(auto_now=True)
     publication_date = models.DateTimeField(blank=True, null=True)
     published_at = models.DateTimeField(blank=True, null=True)
 
