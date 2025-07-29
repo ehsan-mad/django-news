@@ -32,22 +32,24 @@
 - [ ] Ensure main branch is up to date
 
 ### 2. Render Service Setup
-- [ ] Create new Web Service on Render
-- [ ] Connect GitHub repository
-- [ ] Configure build command: `./build.sh`
-- [ ] Configure start command: `gunicorn news_portal.wsgi:application`
+- [x] Create new Web Service on Render
+- [x] Connect GitHub repository
+- [x] Configure build command: `./build.sh`
+- [x] Configure start command: `gunicorn news_portal.wsgi:application`
 
 ### 3. Environment Variables on Render
 Add these environment variables in Render dashboard:
 
-- [ ] `DATABASE_URL` = `postgresql://neondb_owner:npg_MHPujd9ksIT5@ep-old-moon-afol7yjb-pooler.c-2.us-west-2.aws.neon.tech/neondb?sslmode=require&options=endpoint%3Dep-old-moon-afol7yjb`
-- [ ] `SECRET_KEY` = `x-i2elq8*)p!-15e@0+s72)f#uj4v6g1w%wh&6_wc7yb)*(&6=`
-- [ ] `DEBUG` = `False`
-- [ ] `ALLOWED_HOSTS` = `your-actual-app-name.onrender.com`
+- [x] `DATABASE_URL` = `postgresql://neondb_owner:npg_MHPujd9ksIT5@ep-old-moon-afol7yjb-pooler.c-2.us-west-2.aws.neon.tech/neondb?sslmode=require&options=endpoint%3Dep-old-moon-afol7yjb`
+- [x] `SECRET_KEY` = `x-i2elq8*)p!-15e@0+s72)f#uj4v6g1w%wh&6_wc7yb)*(&6=`
+- [x] `DEBUG` = `False`
+- [x] `ALLOWED_HOSTS` = `world-news-7eai.onrender.com`
 
 ### 4. Post-deployment
-- [ ] Verify deployment succeeded
-- [ ] Update ALLOWED_HOSTS with actual Render URL
+- [x] Verify deployment succeeded ✅ App is deployed at world-news-7eai.onrender.com
+- [x] Add `ALLOWED_HOSTS` environment variable ✅ Fixed
+- [x] Fix Neon database connection error ✅ Fixed
+- [ ] **🚨 CRITICAL**: Run migrations to fix missing database columns
 - [ ] Create superuser via Render shell
 - [ ] Test admin interface
 - [ ] Test breaking news functionality
