@@ -38,6 +38,7 @@ class Article(models.Model):
     slug = models.SlugField(max_length=200, unique=True, blank=True)
     content = models.TextField(default="")
     description = models.TextField(blank=True, default="", help_text="Article description")
+    summary = models.TextField(blank=True, default="", help_text="Article summary")
     excerpt = models.TextField(max_length=500, blank=True, help_text="Brief description of the article")
     featured_image = models.ImageField(upload_to='articles/', blank=True, null=True)
     featured_image_url = models.URLField(max_length=500, blank=True, null=True, help_text="Alternative to uploaded image. URL to an external image.")
