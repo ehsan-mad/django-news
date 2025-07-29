@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ title }} - Dashboard{% endblock %}</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Chart.js for analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Custom Dashboard Styles -->
+    <style>
+        /* Sidebar active state */
+        .sidebar-link.active {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-left: 4px solid white;
+        }
+        
+        /* Custom primary color from settings */
+        .btn-primary {
+            background-color: {{ settings.primary_color|default:"#4F46E5" }};
+        }
+        .btn-primary:hover {
+            background-color: {{ settings.primary_color|default:"#4F46E5" }}dd;
+        }
+        .text-primary {
+            color: {{ settings.primary_color|default:"#4F46E5" }};
+        }
+        .border-primary {
+            border-color: {{ settings.primary_color|default:"#4F46E5" }};
+        }
+    </style>
+    
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <aside class="bg-gray-800 text-white w-64 flex-shrink-0 hidden md:block">
+            <div class="p-4">
+                <div class="flex items-center mb-6">
+                    {% if settings.logo %}
+                        <img src="{{ settings.logo.url }}" alt="Logo" class="h-8 mr-2">
+                    {% else %}
+                        <i class="fas fa-newspaper text-2xl mr-2"></i>
+                    {% endif %}
+                    <h1 class="text-xl font-bold">{{ settings.site_name|default:"News Portal" }}</h1>
+                </div>
+                
+                <nav>
+                    <ul>
+                        <li class="mb-1">
+                            <a href="{% url 'dashboard:index' %}" class="sidebar-link flex items-center p-3 rounded hover:bg-gray-700 {% if request.path == '/dashboard/' %}active{% endif %}">
+                                <i class="fas fa-tachometer-alt w-5"></i>
+                                <span>Dashboard</span>
+                            </a>
+                        </li>
+                        
+                        <li class="mb-1">
+                            <a href="{% url 'dashboard:article_list' %}" class="sidebar-link flex items-center p-3 rounded hover:bg-gray-700 {% if '/dashboard/articles' in request.path %}active{% endif %}">
+                                <i class="fas fa-newspaper w-5"></i>
+                                <span>Articles</span>
+                            </a>
+                        </li>
+                        
+                        <li class="mb-1">
+                            <a href="{% url 'dashboard:category_list' %}" class="sidebar-link flex items-center p-3 rounded hover:bg-gray-700 {% if '/dashboard/categories' in request.path %}active{% endif %}">
+                                <i class="fas fa-tags w-5"></i>
+                                <span>Categories</span>
+                            </a>
+                        </li>
+                        
+                        <li class="mb-1">
+                            <a href="{% url 'dashboard:user_list' %}" class="sidebar-link flex items-center p-3 rounded hover:bg-gray-700 {% if '/dashboard/users' in request.path %}active{% endif %}">
+                                <i class="fas fa-users w-5"></i>
+                                <span>Users</span>
+                            </a>
+                        </li>
+                        
+                        {% if settings.enable_analytics %}
+                        <li class="mb-1">
+                            <a href="{% url 'dashboard:analytics' %}" class="sidebar-link flex items-center p-3 rounded hover:bg-gray-700 {% if '/dashboard/analytics' in request.path %}active{% endif %}">
+                                <i class="fas fa-chart-bar w-5"></i>
+                                <span>Analytics</span>
+                            </a>
+                        </li>
+                        {% endif %}
+                        
+                        {% if user.is_superuser %}
+                        <li class="mb-1">
+                            <a href="{% url 'dashboard:settings' %}" class="sidebar-link flex items-center p-3 rounded hover:bg-gray-700 {% if '/dashboard/settings' in request.path %}active{% endif %}">
+                                <i class="fas fa-cog w-5"></i>
+                                <span>Settings</span>
+                            </a>
+                        </li>
+                        {% endif %}
+                        
+                        <li class="mt-6">
+                            <a href="{% url 'dashboard:logout' %}" class="sidebar-link flex items-center p-3 rounded hover:bg-red-700 bg-red-600">
+                                <i class="fas fa-sign-out-alt w-5"></i>
+                                <span>Logout</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </aside>
+        
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- Top Navigation -->
+            <header class="bg-white shadow-sm z-10">
+                <div class="flex items-center justify-between px-6 py-3">
+                    <div class="flex items-center">
+                        <button id="menu-toggle" class="md:hidden text-gray-600 mr-4">
+                            <i class="fas fa-bars text-lg"></i>
+                        </button>
+                        <h2 class="text-xl font-semibold text-gray-800">{{ title }}</h2>
+                    </div>
+                    
+                    <div class="flex items-center">
+                        <a href="{% url 'news:home' %}" target="_blank" class="text-gray-600 hover:text-gray-900 mr-4" title="View Site">
+                            <i class="fas fa-external-link-alt"></i>
+                        </a>
+                        
+                        <div class="relative">
+                            <button id="user-menu-button" class="flex items-center text-gray-600 focus:outline-none">
+                                <span class="hidden md:block mr-2">{{ user.get_full_name|default:user.username }}</span>
+                                <div class="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center text-gray-700">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                            </button>
+                            
+                            <div id="user-menu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+                                <a href="{% url 'admin:index' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Admin Panel</a>
+                                <a href="{% url 'dashboard:logout' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Logout</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+            <!-- Mobile Sidebar -->
+            <div id="mobile-menu" class="fixed inset-0 bg-gray-900 bg-opacity-50 z-40 md:hidden hidden">
+                <div class="bg-gray-800 text-white w-64 h-full overflow-y-auto">
+                    <div class="p-4">
+                        <div class="flex items-center justify-between mb-6">
+                            <div class="flex items-center">
+                                {% if settings.logo %}
+                                    <img src="{{ settings.logo.url }}" alt="Logo" class="h-8 mr-2">
+                                {% else %}
+                                    <i class="fas fa-newspaper text-2xl mr-2"></i>
+                                {% endif %}
+                                <h1 class="text-xl font-bold">{{ settings.site_name|default:"News Portal" }}</h1>
+                            </div>
+                            <button id="close-menu" class="text-white">
+                                <i class="fas fa-times text-lg"></i>
+                            </button>
+                        </div>
+                        
+                        <nav>
+                            <ul>
+                                <li class="mb-1">
+                                    <a href="{% url 'dashboard:index' %}" class="sidebar-link flex items-center p-3 rounded hover:bg-gray-700 {% if request.path == '/dashboard/' %}active{% endif %}">
+                                        <i class="fas fa-tachometer-alt w-5"></i>
+                                        <span>Dashboard</span>
+                                    </a>
+                                </li>
+                                
+                                <li class="mb-1">
+                                    <a href="{% url 'dashboard:article_list' %}" class="sidebar-link flex items-center p-3 rounded hover:bg-gray-700 {% if '/dashboard/articles' in request.path %}active{% endif %}">
+                                        <i class="fas fa-newspaper w-5"></i>
+                                        <span>Articles</span>
+                                    </a>
+                                </li>
+                                
+                                <li class="mb-1">
+                                    <a href="{% url 'dashboard:category_list' %}" class="sidebar-link flex items-center p-3 rounded hover:bg-gray-700 {% if '/dashboard/categories' in request.path %}active{% endif %}">
+                                        <i class="fas fa-tags w-5"></i>
+                                        <span>Categories</span>
+                                    </a>
+                                </li>
+                                
+                                <li class="mb-1">
+                                    <a href="{% url 'dashboard:user_list' %}" class="sidebar-link flex items-center p-3 rounded hover:bg-gray-700 {% if '/dashboard/users' in request.path %}active{% endif %}">
+                                        <i class="fas fa-users w-5"></i>
+                                        <span>Users</span>
+                                    </a>
+                                </li>
+                                
+                                {% if settings.enable_analytics %}
+                                <li class="mb-1">
+                                    <a href="{% url 'dashboard:analytics' %}" class="sidebar-link flex items-center p-3 rounded hover:bg-gray-700 {% if '/dashboard/analytics' in request.path %}active{% endif %}">
+                                        <i class="fas fa-chart-bar w-5"></i>
+                                        <span>Analytics</span>
+                                    </a>
+                                </li>
+                                {% endif %}
+                                
+                                {% if user.is_superuser %}
+                                <li class="mb-1">
+                                    <a href="{% url 'dashboard:settings' %}" class="sidebar-link flex items-center p-3 rounded hover:bg-gray-700 {% if '/dashboard/settings' in request.path %}active{% endif %}">
+                                        <i class="fas fa-cog w-5"></i>
+                                        <span>Settings</span>
+                                    </a>
+                                </li>
+                                {% endif %}
+                                
+                                <li class="mt-6">
+                                    <a href="{% url 'dashboard:logout' %}" class="sidebar-link flex items-center p-3 rounded hover:bg-red-700 bg-red-600">
+                                        <i class="fas fa-sign-out-alt w-5"></i>
+                                        <span>Logout</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Main Content -->
+            <main class="flex-1 overflow-y-auto p-6">
+                <!-- Messages -->
+                {% if messages %}
+                <div class="mb-6">
+                    {% for message in messages %}
+                    <div class="p-4 mb-2 rounded-md {% if message.tags == 'success' %}bg-green-100 text-green-800{% elif message.tags == 'error' %}bg-red-100 text-red-800{% elif message.tags == 'warning' %}bg-yellow-100 text-yellow-800{% else %}bg-blue-100 text-blue-800{% endif %}">
+                        <div class="flex items-center">
+                            <i class="fas {% if message.tags == 'success' %}fa-check-circle{% elif message.tags == 'error' %}fa-exclamation-circle{% elif message.tags == 'warning' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %} mr-3"></i>
+                            <span>{{ message }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                <!-- Content -->
+                <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                    {% block content %}{% endblock %}
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <!-- JavaScript -->
+    <script>
+        // User menu toggle
+        document.getElementById('user-menu-button').addEventListener('click', function() {
+            document.getElementById('user-menu').classList.toggle('hidden');
+        });
+        
+        // Mobile menu toggle
+        document.getElementById('menu-toggle').addEventListener('click', function() {
+            document.getElementById('mobile-menu').classList.remove('hidden');
+        });
+        
+        // Close mobile menu
+        document.getElementById('close-menu').addEventListener('click', function() {
+            document.getElementById('mobile-menu').classList.add('hidden');
+        });
+        
+        // Close menus when clicking outside
+        document.addEventListener('click', function(event) {
+            const userMenu = document.getElementById('user-menu');
+            const userMenuButton = document.getElementById('user-menu-button');
+            
+            if (!userMenuButton.contains(event.target) && !userMenu.contains(event.target)) {
+                userMenu.classList.add('hidden');
+            }
+        });
+    </script>
+    
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

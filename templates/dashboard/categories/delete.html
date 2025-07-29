@@ -1,0 +1,140 @@
+{% extends 'dashboard/base.html' %}
+
+{% block content %}
+<div class="p-6">
+    <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-xl font-semibold mb-6 text-red-600">Delete Category</h2>
+        
+        {% if messages %}
+        <div class="mb-6">
+            {% for message in messages %}
+            <div class="p-4 mb-2 rounded-md {% if message.tags == 'success' %}bg-green-100 text-green-800{% elif message.tags == 'error' %}bg-red-100 text-red-800{% elif message.tags == 'warning' %}bg-yellow-100 text-yellow-800{% else %}bg-blue-100 text-blue-800{% endif %}">
+                <div class="flex items-center">
+                    <i class="fas {% if message.tags == 'success' %}fa-check-circle{% elif message.tags == 'error' %}fa-exclamation-circle{% elif message.tags == 'warning' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %} mr-3"></i>
+                    <span>{{ message }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <div class="flex items-start">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-exclamation-triangle text-red-600 mt-0.5"></i>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-red-800 font-medium">Warning: This action cannot be undone</h3>
+                    <div class="mt-2 text-red-700">
+                        <p>You are about to delete the category "<strong>{{ category.name }}</strong>".</p>
+                        
+                        {% if article_count > 0 %}
+                        <p class="mt-2 font-medium">This category contains {{ article_count }} article(s)!</p>
+                        <p>Deleting this category will also delete all articles in this category or make them uncategorized based on your selection below.</p>
+                        {% else %}
+                        <p>This category doesn't have any articles.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mb-6">
+            <h3 class="text-lg font-medium mb-2">Category Details:</h3>
+            <p><strong>Name:</strong> {{ category.name }}</p>
+            <p><strong>Slug:</strong> {{ category.slug }}</p>
+            <p><strong>Created:</strong> {{ category.created_at|date:"M d, Y" }}</p>
+            <p><strong>Articles:</strong> {{ article_count }}</p>
+            {% if category.description %}
+            <p><strong>Description:</strong> {{ category.description }}</p>
+            {% endif %}
+        </div>
+        
+        <form method="post">
+            {% csrf_token %}
+            
+            {% if article_count > 0 %}
+            <div class="mb-6">
+                <h3 class="text-lg font-medium mb-2">What to do with articles in this category?</h3>
+                <div class="space-y-2">
+                    <div class="flex items-center">
+                        <input type="radio" id="uncategorize" name="article_action" value="uncategorize" checked
+                               class="h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                        <label for="uncategorize" class="ml-2 block text-sm text-gray-700">
+                            Make articles uncategorized
+                        </label>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="radio" id="delete" name="article_action" value="delete"
+                               class="h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                        <label for="delete" class="ml-2 block text-sm text-gray-700">
+                            Delete all articles in this category
+                        </label>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="radio" id="move" name="article_action" value="move"
+                               class="h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                        <label for="move" class="ml-2 block text-sm text-gray-700">
+                            Move articles to another category
+                        </label>
+                    </div>
+                    
+                    <div id="move-category-select" class="mt-2 ml-6 hidden">
+                        <label for="new_category" class="block text-sm font-medium text-gray-700 mb-1">Select Category</label>
+                        <select id="new_category" name="new_category"
+                                class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            {% for cat in categories %}
+                                {% if cat.id != category.id %}
+                                <option value="{{ cat.id }}">{{ cat.name }}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="flex items-center mb-6">
+                <input type="checkbox" id="confirm" name="confirm" required
+                       class="h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-500">
+                <label for="confirm" class="ml-2 text-gray-700">I understand that this action cannot be undone.</label>
+            </div>
+            
+            <div class="flex justify-between">
+                <a href="{% url 'dashboard:category_list' %}" class="bg-gray-300 text-gray-700 py-2 px-4 rounded-lg font-medium hover:bg-gray-400 transition duration-200">
+                    Cancel
+                </a>
+                <button type="submit" class="bg-red-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-red-700 transition duration-200">
+                    Delete Category
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const moveRadio = document.getElementById('move');
+        const moveCategorySelect = document.getElementById('move-category-select');
+        
+        function toggleCategorySelect() {
+            if (moveRadio.checked) {
+                moveCategorySelect.classList.remove('hidden');
+            } else {
+                moveCategorySelect.classList.add('hidden');
+            }
+        }
+        
+        // Initial state
+        toggleCategorySelect();
+        
+        // Listen to radio button changes
+        const radioButtons = document.querySelectorAll('input[name="article_action"]');
+        radioButtons.forEach(radio => {
+            radio.addEventListener('change', toggleCategorySelect);
+        });
+    });
+</script>
+{% endblock %}

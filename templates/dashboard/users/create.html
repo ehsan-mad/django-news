@@ -1,0 +1,185 @@
+{% extends 'dashboard/base.html' %}
+
+{% block content %}
+<div class="p-6">
+    <div class="mb-6">
+        <h2 class="text-2xl font-semibold">Add New User</h2>
+        <p class="text-gray-600">Create a new user with custom permissions</p>
+    </div>
+    
+    <form method="post" action="{% url 'dashboard:user_create' %}">
+        {% csrf_token %}
+        
+        <div class="bg-white rounded-lg shadow-md overflow-hidden mb-6">
+            <div class="px-6 py-4 bg-gray-50 border-b">
+                <h3 class="font-medium">User Information</h3>
+            </div>
+            <div class="p-6 space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="username" class="block text-sm font-medium text-gray-700 mb-1">Username *</label>
+                        <input type="text" id="username" name="username" required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                        <input type="email" id="email" name="email" required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="first_name" class="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+                        <input type="text" id="first_name" name="first_name"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    
+                    <div>
+                        <label for="last_name" class="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                        <input type="text" id="last_name" name="last_name"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                </div>
+                
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password *</label>
+                    <input type="password" id="password" name="password" required
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+                
+                <div class="flex items-center">
+                    <input type="checkbox" id="is_staff" name="is_staff" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                    <label for="is_staff" class="ml-2 block text-sm text-gray-700">
+                        Staff Status (can access admin site)
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-md overflow-hidden mb-6">
+            <div class="px-6 py-4 bg-gray-50 border-b">
+                <h3 class="font-medium">Dashboard Permissions</h3>
+            </div>
+            <div class="p-6">
+                <div class="mb-4">
+                    <p class="text-sm text-gray-600 mb-2">
+                        Select the permissions this user should have in the dashboard.
+                    </p>
+                </div>
+                
+                <!-- Article Permissions -->
+                <div class="mb-6">
+                    <h4 class="text-base font-medium mb-2">Article Permissions</h4>
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
+                        <div class="flex items-center">
+                            <input type="checkbox" id="perm_article_view" name="perm_article_view" 
+                                   class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                            <label for="perm_article_view" class="ml-2 block text-sm text-gray-700">View</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="perm_article_create" name="perm_article_create" 
+                                   class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                            <label for="perm_article_create" class="ml-2 block text-sm text-gray-700">Create</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="perm_article_edit" name="perm_article_edit" 
+                                   class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                            <label for="perm_article_edit" class="ml-2 block text-sm text-gray-700">Edit</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="perm_article_delete" name="perm_article_delete" 
+                                   class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                            <label for="perm_article_delete" class="ml-2 block text-sm text-gray-700">Delete</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="perm_article_publish" name="perm_article_publish" 
+                                   class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                            <label for="perm_article_publish" class="ml-2 block text-sm text-gray-700">Publish</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="perm_article_full" name="perm_article_full" 
+                                   class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                            <label for="perm_article_full" class="ml-2 block text-sm text-gray-700">Full Access</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Category Permissions -->
+                <div class="mb-6">
+                    <h4 class="text-base font-medium mb-2">Category Permissions</h4>
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
+                        <div class="flex items-center">
+                            <input type="checkbox" id="perm_category_view" name="perm_category_view" 
+                                   class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                            <label for="perm_category_view" class="ml-2 block text-sm text-gray-700">View</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="perm_category_create" name="perm_category_create" 
+                                   class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                            <label for="perm_category_create" class="ml-2 block text-sm text-gray-700">Create</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="perm_category_edit" name="perm_category_edit" 
+                                   class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                            <label for="perm_category_edit" class="ml-2 block text-sm text-gray-700">Edit</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="perm_category_delete" name="perm_category_delete" 
+                                   class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                            <label for="perm_category_delete" class="ml-2 block text-sm text-gray-700">Delete</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="perm_category_full" name="perm_category_full" 
+                                   class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                            <label for="perm_category_full" class="ml-2 block text-sm text-gray-700">Full Access</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- User Management Permissions -->
+                <div>
+                    <h4 class="text-base font-medium mb-2">User Management Permissions</h4>
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
+                        <div class="flex items-center">
+                            <input type="checkbox" id="perm_user_view" name="perm_user_view" 
+                                   class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                            <label for="perm_user_view" class="ml-2 block text-sm text-gray-700">View</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="perm_user_create" name="perm_user_create" 
+                                   class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                            <label for="perm_user_create" class="ml-2 block text-sm text-gray-700">Create</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="perm_user_edit" name="perm_user_edit" 
+                                   class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                            <label for="perm_user_edit" class="ml-2 block text-sm text-gray-700">Edit</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="perm_user_delete" name="perm_user_delete" 
+                                   class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                            <label for="perm_user_delete" class="ml-2 block text-sm text-gray-700">Delete</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="perm_user_full" name="perm_user_full" 
+                                   class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                            <label for="perm_user_full" class="ml-2 block text-sm text-gray-700">Full Access</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="flex justify-between">
+            <a href="{% url 'dashboard:user_list' %}" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg text-gray-700">
+                Cancel
+            </a>
+            <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white">
+                Create User
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

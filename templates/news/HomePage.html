@@ -141,9 +141,9 @@
 <!-- Breaking News Banner -->
 <div class="relative bg-gray-900 text-white py-4 mb-8 overflow-hidden">
     <!-- Background Image -->
-    {% if featured_articles.0.featured_image %}
+    {% if breaking_news_articles.0.get_image_url and breaking_news_articles.0.show_breaking_image %}
     <div class="absolute inset-0">
-        <img src="{{ featured_articles.0.featured_image.url }}" 
+        <img src="{{ breaking_news_articles.0.get_image_url }}" 
              alt="Breaking News Background" 
              class="w-full h-full object-cover opacity-30">
         <div class="absolute inset-0 bg-gradient-to-r from-red-900/80 via-red-800/60 to-transparent"></div>
@@ -159,10 +159,22 @@
             </span>
             <div class="flex-1 overflow-hidden">
                 <div class="whitespace-nowrap animate-marquee text-sm font-medium">
-                    🔥 {{ featured_articles.0.title }} • 
-                    {% for article in featured_articles|slice:"1:3" %}
-                        📈 {{ article.title|truncatechars:50 }} • 
-                    {% endfor %}
+                    {% if breaking_news_articles %}
+                        {% for article in breaking_news_articles %}
+                            {% if article.breaking_news_text %}
+                                🔥 {{ article.breaking_news_text }} • 
+                                <a href="{{ article.get_absolute_url }}" class="underline hover:text-blue-300">Read full story</a> • 
+                            {% else %}
+                                🔥 {{ article.title }} • 
+                                <a href="{{ article.get_absolute_url }}" class="underline hover:text-blue-300">Read full story</a> • 
+                            {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        🔥 {{ featured_articles.0.title }} • 
+                        {% for article in featured_articles|slice:"1:3" %}
+                            📈 {{ article.title|truncatechars:50 }} • 
+                        {% endfor %}
+                    {% endif %}
                     🏆 Stay updated with the latest news
                 </div>
             </div>
@@ -184,8 +196,8 @@
             {% with featured_articles.0 as main_article %}
             <div class="lg:col-span-2">
                 <article class="relative bg-white rounded-2xl shadow-2xl overflow-hidden h-96 lg:h-[500px] hero-main group">
-                    {% if main_article.featured_image %}
-                    <img src="{{ main_article.featured_image.url }}" alt="{{ main_article.title }}" 
+                    {% if main_article.get_image_url %}
+                    <img src="{{ main_article.get_image_url }}" alt="{{ main_article.title }}" 
                          class="w-full h-full object-cover hero-image">
                     {% else %}
                     <!-- Category-based placeholder -->
@@ -296,9 +308,9 @@
                 {% for article in featured_articles|slice:"1:4" %}
                 <article class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 hero-card animate-fadeInUp group">
                     <div class="flex">
-                        {% if article.featured_image %}
+                        {% if article.get_image_url %}
                         <div class="w-24 h-20 flex-shrink-0 relative overflow-hidden">
-                            <img src="{{ article.featured_image.url }}" alt="{{ article.title }}" 
+                            <img src="{{ article.get_image_url }}" alt="{{ article.title }}" 
                                  class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
                         </div>
                         {% else %}
@@ -384,9 +396,9 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {% for article in latest_articles %}
                 <article class="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition duration-300">
-                    {% if article.featured_image %}
+                    {% if article.get_image_url %}
                     <div class="relative">
-                        <img src="{{ article.featured_image.url }}" alt="{{ article.title }}" 
+                        <img src="{{ article.get_image_url }}" alt="{{ article.title }}" 
                              class="w-full h-48 object-cover">
                         {% if article.is_featured %}
                         <div class="absolute top-2 left-2">
@@ -483,9 +495,9 @@
                 {% for article in trending_articles %}
                 <article class="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition duration-300">
                     <div class="flex">
-                        {% if article.featured_image %}
+                        {% if article.get_image_url %}
                         <div class="w-20 h-20 flex-shrink-0 mr-4">
-                            <img src="{{ article.featured_image.url }}" alt="{{ article.title }}" 
+                            <img src="{{ article.get_image_url }}" alt="{{ article.title }}" 
                                  class="w-full h-full object-cover rounded">
                         </div>
                         {% else %}
@@ -564,9 +576,9 @@
             <div class="space-y-4">
                 {% for article in recent_articles|slice:":5" %}
                 <article class="flex items-start space-x-3">
-                    {% if article.featured_image %}
+                    {% if article.get_image_url %}
                     <div class="w-16 h-12 flex-shrink-0">
-                        <img src="{{ article.featured_image.url }}" alt="{{ article.title }}" 
+                        <img src="{{ article.get_image_url }}" alt="{{ article.title }}" 
                              class="w-full h-full object-cover rounded">
                     </div>
                     {% else %}

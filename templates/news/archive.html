@@ -62,9 +62,9 @@
         <article class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition duration-200">
             <div class="flex flex-col md:flex-row">
                 <!-- Article Image -->
-                {% if article.featured_image %}
+                {% if article.get_image_url %}
                 <div class="md:w-48 md:flex-shrink-0 mb-4 md:mb-0 md:mr-6">
-                    <img src="{{ article.featured_image.url }}" alt="{{ article.title }}" class="w-full h-32 md:h-full object-cover rounded-lg">
+                    <img src="{{ article.get_image_url }}" alt="{{ article.title }}" class="w-full h-32 md:h-full object-cover rounded-lg">
                 </div>
                 {% endif %}
                 

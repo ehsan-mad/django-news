@@ -1,0 +1,24 @@
+.prominent-checkbox {
+    background-color: #fff8db;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ffeb99;
+    margin-bottom: 10px;
+}
+
+.prominent-checkbox input[type="checkbox"] {
+    transform: scale(1.5);
+    margin-right: 10px;
+}
+
+.prominent-checkbox label {
+    font-weight: bold;
+    color: #d32f2f;
+}
+
+fieldset.wide {
+    border: 1px solid #e0e0e0;
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}

@@ -1,0 +1,96 @@
+{% extends 'dashboard/base.html' %}
+
+{% block content %}
+<div class="p-6">
+    <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-xl font-semibold mb-6">Create New Category</h2>
+        
+        {% if messages %}
+        <div class="mb-6">
+            {% for message in messages %}
+            <div class="p-4 mb-2 rounded-md {% if message.tags == 'success' %}bg-green-100 text-green-800{% elif message.tags == 'error' %}bg-red-100 text-red-800{% elif message.tags == 'warning' %}bg-yellow-100 text-yellow-800{% else %}bg-blue-100 text-blue-800{% endif %}">
+                <div class="flex items-center">
+                    <i class="fas {% if message.tags == 'success' %}fa-check-circle{% elif message.tags == 'error' %}fa-exclamation-circle{% elif message.tags == 'warning' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %} mr-3"></i>
+                    <span>{{ message }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="mb-6">
+                <!-- Name -->
+                <div class="mb-4">
+                    <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+                    <input type="text" id="name" name="name" required
+                           class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                </div>
+                
+                <!-- Slug -->
+                <div class="mb-4">
+                    <label for="slug" class="block text-sm font-medium text-gray-700 mb-1">Slug</label>
+                    <div class="flex">
+                        <input type="text" id="slug" name="slug"
+                               class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        <button type="button" id="generate-slug" class="ml-2 px-3 py-2 bg-gray-200 rounded-lg text-gray-700 hover:bg-gray-300">
+                            Generate
+                        </button>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">Leave empty to auto-generate from name</p>
+                </div>
+                
+                <!-- Description -->
+                <div>
+                    <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <textarea id="description" name="description" rows="3"
+                              class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"></textarea>
+                </div>
+            </div>
+            
+            <div class="flex justify-between">
+                <a href="{% url 'dashboard:category_list' %}" class="bg-gray-300 text-gray-700 py-2 px-4 rounded-lg font-medium hover:bg-gray-400 transition duration-200">
+                    Cancel
+                </a>
+                <button type="submit" class="btn-primary text-white py-2 px-4 rounded-lg font-medium hover:bg-indigo-600 transition duration-200">
+                    Create Category
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Generate slug from name
+        const nameInput = document.getElementById('name');
+        const slugInput = document.getElementById('slug');
+        const generateSlugBtn = document.getElementById('generate-slug');
+        
+        function generateSlug(text) {
+            return text.toString().toLowerCase()
+                .replace(/\s+/g, '-')           // Replace spaces with -
+                .replace(/[^\w\-]+/g, '')       // Remove all non-word chars
+                .replace(/\-\-+/g, '-')         // Replace multiple - with single -
+                .replace(/^-+/, '')             // Trim - from start of text
+                .replace(/-+$/, '');            // Trim - from end of text
+        }
+        
+        generateSlugBtn.addEventListener('click', function() {
+            if (nameInput.value) {
+                slugInput.value = generateSlug(nameInput.value);
+            }
+        });
+        
+        nameInput.addEventListener('blur', function() {
+            if (nameInput.value && !slugInput.value) {
+                slugInput.value = generateSlug(nameInput.value);
+            }
+        });
+    });
+</script>
+{% endblock %}

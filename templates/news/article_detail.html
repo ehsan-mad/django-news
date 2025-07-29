@@ -6,8 +6,8 @@
 <meta name="description" content="{{ article.excerpt|truncatewords:20 }}">
 <meta property="og:title" content="{{ article.title }}">
 <meta property="og:description" content="{{ article.excerpt|truncatewords:20 }}">
-{% if article.featured_image %}
-<meta property="og:image" content="{{ article.featured_image.url }}">
+{% if article.get_image_url %}
+<meta property="og:image" content="{{ article.get_image_url }}">
 {% endif %}
 <meta property="og:type" content="article">
 <meta name="twitter:card" content="summary_large_image">
@@ -50,9 +50,9 @@
         </p>
         {% endif %}
 
-        {% if article.featured_image %}
+        {% if article.get_image_url %}
         <div class="mb-8">
-            <img src="{{ article.featured_image.url }}" alt="{{ article.title }}" class="w-full h-96 object-cover rounded-lg shadow-lg">
+            <img src="{{ article.get_image_url }}" alt="{{ article.title }}" class="w-full h-96 object-cover rounded-lg shadow-lg">
         </div>
         {% endif %}
     </header>
@@ -110,6 +110,8 @@
             <article class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition duration-200">
                 {% if related_article.featured_image %}
                 <img src="{{ related_article.featured_image.url }}" alt="{{ related_article.title }}" class="w-full h-48 object-cover">
+                {% elif related_article.featured_image_url %}
+                <img src="{{ related_article.featured_image_url }}" alt="{{ related_article.title }}" class="w-full h-48 object-cover">
                 {% else %}
                 <div class="w-full h-48 bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
                     <i class="fas fa-newspaper text-gray-400 text-3xl"></i>

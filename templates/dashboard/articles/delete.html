@@ -1,0 +1,67 @@
+{% extends 'dashboard/base.html' %}
+
+{% block content %}
+<div class="p-6">
+    <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-xl font-semibold mb-6 text-red-600">Delete Article</h2>
+        
+        {% if messages %}
+        <div class="mb-6">
+            {% for message in messages %}
+            <div class="p-4 mb-2 rounded-md {% if message.tags == 'success' %}bg-green-100 text-green-800{% elif message.tags == 'error' %}bg-red-100 text-red-800{% elif message.tags == 'warning' %}bg-yellow-100 text-yellow-800{% else %}bg-blue-100 text-blue-800{% endif %}">
+                <div class="flex items-center">
+                    <i class="fas {% if message.tags == 'success' %}fa-check-circle{% elif message.tags == 'error' %}fa-exclamation-circle{% elif message.tags == 'warning' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %} mr-3"></i>
+                    <span>{{ message }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <div class="flex items-start">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-exclamation-triangle text-red-600 mt-0.5"></i>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-red-800 font-medium">Warning: This action cannot be undone</h3>
+                    <div class="mt-2 text-red-700">
+                        <p>You are about to delete the article "<strong>{{ article.title }}</strong>".</p>
+                        <p>This will permanently delete the article and all associated data.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mb-6">
+            <h3 class="text-lg font-medium mb-2">Article Details:</h3>
+            <p><strong>Title:</strong> {{ article.title }}</p>
+            <p><strong>Category:</strong> {{ article.category.name }}</p>
+            <p><strong>Status:</strong> {{ article.get_status_display }}</p>
+            <p><strong>Created:</strong> {{ article.created_at|date:"M d, Y H:i" }}</p>
+            <p><strong>Author:</strong> {{ article.author.get_full_name|default:article.author.username }}</p>
+            <p><strong>Views:</strong> {{ article.views_count|default:"0" }}</p>
+        </div>
+        
+        <form method="post">
+            {% csrf_token %}
+            <div class="flex items-center">
+                <div class="mr-4">
+                    <input type="checkbox" id="confirm" name="confirm" required
+                           class="h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-500">
+                    <label for="confirm" class="ml-2 text-gray-700">I understand that this action cannot be undone.</label>
+                </div>
+            </div>
+            
+            <div class="mt-6 flex justify-between">
+                <a href="{% url 'dashboard:article_list' %}" class="bg-gray-300 text-gray-700 py-2 px-4 rounded-lg font-medium hover:bg-gray-400 transition duration-200">
+                    Cancel
+                </a>
+                <button type="submit" class="bg-red-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-red-700 transition duration-200">
+                    Delete Article
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

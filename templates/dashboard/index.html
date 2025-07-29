@@ -1,0 +1,199 @@
+{% extends 'dashboard/base.html' %}
+
+{% block content %}
+<div class="p-6">
+    <!-- Dashboard Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <!-- Total Articles -->
+        <div class="bg-white rounded-lg shadow p-6 flex items-center">
+            <div class="bg-blue-100 text-blue-500 p-3 rounded-full mr-4">
+                <i class="fas fa-newspaper text-xl"></i>
+            </div>
+            <div>
+                <h3 class="text-gray-500 text-sm">Total Articles</h3>
+                <p class="text-2xl font-semibold">{{ total_articles }}</p>
+            </div>
+        </div>
+        
+        <!-- Published Articles -->
+        <div class="bg-white rounded-lg shadow p-6 flex items-center">
+            <div class="bg-green-100 text-green-500 p-3 rounded-full mr-4">
+                <i class="fas fa-check-circle text-xl"></i>
+            </div>
+            <div>
+                <h3 class="text-gray-500 text-sm">Published Articles</h3>
+                <p class="text-2xl font-semibold">{{ published_articles }}</p>
+            </div>
+        </div>
+        
+        <!-- Draft Articles -->
+        <div class="bg-white rounded-lg shadow p-6 flex items-center">
+            <div class="bg-yellow-100 text-yellow-500 p-3 rounded-full mr-4">
+                <i class="fas fa-edit text-xl"></i>
+            </div>
+            <div>
+                <h3 class="text-gray-500 text-sm">Draft Articles</h3>
+                <p class="text-2xl font-semibold">{{ draft_articles }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <!-- Weekly Article Stats Chart -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-semibold">Articles This Week</h2>
+            </div>
+            <div>
+                <canvas id="weeklyChart" height="200"></canvas>
+            </div>
+        </div>
+        
+        <!-- Categories Overview -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-semibold">Categories Overview</h2>
+                <a href="{% url 'dashboard:category_list' %}" class="text-blue-600 text-sm hover:underline">View All</a>
+            </div>
+            <div class="overflow-hidden">
+                <table class="min-w-full">
+                    <thead>
+                        <tr>
+                            <th class="px-4 py-2 text-left text-sm font-medium text-gray-500">Category</th>
+                            <th class="px-4 py-2 text-right text-sm font-medium text-gray-500">Articles</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for category in categories %}
+                        <tr class="border-t">
+                            <td class="px-4 py-3 text-sm">{{ category.name }}</td>
+                            <td class="px-4 py-3 text-sm text-right">{{ category.article_count }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr class="border-t">
+                            <td colspan="2" class="px-4 py-3 text-sm text-center text-gray-500">No categories found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Recent Articles -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-semibold">Recent Articles</h2>
+                <a href="{% url 'dashboard:article_list' %}" class="text-blue-600 text-sm hover:underline">View All</a>
+            </div>
+            <div class="overflow-hidden">
+                <table class="min-w-full">
+                    <thead>
+                        <tr>
+                            <th class="px-4 py-2 text-left text-sm font-medium text-gray-500">Title</th>
+                            <th class="px-4 py-2 text-left text-sm font-medium text-gray-500">Author</th>
+                            <th class="px-4 py-2 text-left text-sm font-medium text-gray-500">Status</th>
+                            <th class="px-4 py-2 text-left text-sm font-medium text-gray-500">Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for article in recent_articles %}
+                        <tr class="border-t">
+                            <td class="px-4 py-3 text-sm">
+                                <a href="{% url 'dashboard:article_edit' article.id %}" class="hover:text-blue-600">
+                                    {{ article.title|truncatechars:30 }}
+                                </a>
+                            </td>
+                            <td class="px-4 py-3 text-sm">{{ article.author.username }}</td>
+                            <td class="px-4 py-3 text-sm">
+                                <span class="px-2 py-1 text-xs rounded-full 
+                                    {% if article.status == 'published' %}bg-green-100 text-green-800
+                                    {% elif article.status == 'draft' %}bg-yellow-100 text-yellow-800
+                                    {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                    {{ article.get_status_display }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3 text-sm text-gray-500">{{ article.created_at|date:"M d, Y" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr class="border-t">
+                            <td colspan="4" class="px-4 py-3 text-sm text-center text-gray-500">No articles found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Recent Activity -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-semibold">Recent Activity</h2>
+            </div>
+            <div>
+                <ul class="space-y-4">
+                    {% for activity in recent_activity %}
+                    <li class="flex items-start border-b pb-3">
+                        <div class="bg-gray-100 rounded-full p-2 mr-3">
+                            <i class="fas 
+                                {% if activity.action == 'create' %}fa-plus-circle text-green-500
+                                {% elif activity.action == 'update' %}fa-edit text-blue-500
+                                {% elif activity.action == 'delete' %}fa-trash text-red-500
+                                {% elif activity.action == 'publish' %}fa-check-circle text-green-500
+                                {% elif activity.action == 'login' %}fa-sign-in-alt text-indigo-500
+                                {% elif activity.action == 'logout' %}fa-sign-out-alt text-gray-500
+                                {% endif %}">
+                            </i>
+                        </div>
+                        <div>
+                            <p class="text-sm">
+                                <span class="font-medium">{{ activity.user.username }}</span>
+                                {{ activity.get_action_display|lower }}
+                                a {{ activity.content_type }}
+                                {% if activity.object_repr %}({{ activity.object_repr }}){% endif %}
+                            </p>
+                            <p class="text-xs text-gray-500">{{ activity.timestamp|date:"M d, Y H:i" }}</p>
+                        </div>
+                    </li>
+                    {% empty %}
+                    <li class="text-center text-gray-500 py-4">No recent activity.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Weekly articles chart
+    const ctx = document.getElementById('weeklyChart').getContext('2d');
+    const weeklyChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: {{ days|safe }},
+            datasets: [{
+                label: 'Articles',
+                data: {{ article_counts|safe }},
+                backgroundColor: '{{ settings.primary_color|default:"rgba(79, 70, 229, 0.6)" }}',
+                borderColor: '{{ settings.primary_color|default:"rgba(79, 70, 229, 1)" }}',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        precision: 0
+                    }
+                }
+            },
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+</script>
+{% endblock %}

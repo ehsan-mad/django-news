@@ -1,0 +1,222 @@
+{% extends 'dashboard/base.html' %}
+
+{% block extra_head %}
+<!-- Include CKEditor for rich text editing -->
+<script src="https://cdn.ckeditor.com/ckeditor5/36.0.1/classic/ckeditor.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="p-6">
+    <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-xl font-semibold mb-6">Create New Article</h2>
+        
+        {% if messages %}
+        <div class="mb-6">
+            {% for message in messages %}
+            <div class="p-4 mb-2 rounded-md {% if message.tags == 'success' %}bg-green-100 text-green-800{% elif message.tags == 'error' %}bg-red-100 text-red-800{% elif message.tags == 'warning' %}bg-yellow-100 text-yellow-800{% else %}bg-blue-100 text-blue-800{% endif %}">
+                <div class="flex items-center">
+                    <i class="fas {% if message.tags == 'success' %}fa-check-circle{% elif message.tags == 'error' %}fa-exclamation-circle{% elif message.tags == 'warning' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %} mr-3"></i>
+                    <span>{{ message }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <!-- Title -->
+                <div class="md:col-span-2">
+                    <label for="title" class="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+                    <input type="text" id="title" name="title" required
+                           class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                </div>
+                
+                <!-- Slug -->
+                <div class="md:col-span-2">
+                    <label for="slug" class="block text-sm font-medium text-gray-700 mb-1">Slug</label>
+                    <div class="flex">
+                        <input type="text" id="slug" name="slug"
+                               class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        <button type="button" id="generate-slug" class="ml-2 px-3 py-2 bg-gray-200 rounded-lg text-gray-700 hover:bg-gray-300">
+                            Generate
+                        </button>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">Leave empty to auto-generate from title</p>
+                </div>
+                
+                <!-- Category -->
+                <div>
+                    <label for="category" class="block text-sm font-medium text-gray-700 mb-1">Category *</label>
+                    <select id="category" name="category" required
+                            class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        <option value="">Select a category</option>
+                        {% for category in categories %}
+                        <option value="{{ category.id }}">{{ category.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <!-- Status -->
+                <div>
+                    <label for="status" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <select id="status" name="status"
+                            class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        <option value="draft">Draft</option>
+                        <option value="published">Published</option>
+                    </select>
+                </div>
+                
+                <!-- Featured -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Featured Article</label>
+                    <div class="mt-1">
+                        <label class="inline-flex items-center text-sm">
+                            <input type="checkbox" name="is_featured" id="is_featured" class="rounded border-gray-300 text-indigo-600">
+                            <span class="ml-2">Mark as Featured</span>
+                        </label>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">Featured articles appear prominently on the homepage</p>
+                </div>
+                
+                <!-- Breaking News -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Breaking News</label>
+                    <div class="mt-1">
+                        <label class="inline-flex items-center text-sm">
+                            <input type="checkbox" name="is_breaking_news" id="is_breaking_news" class="rounded border-gray-300 text-indigo-600" onchange="toggleBreakingNewsText()">
+                            <span class="ml-2">Mark as Breaking News</span>
+                        </label>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">Will be displayed in the breaking news banner</p>
+                </div>
+                
+                <!-- Breaking News Text -->
+                <div id="breaking_news_text_container" class="md:col-span-2 hidden">
+                    <label for="breaking_news_text" class="block text-sm font-medium text-gray-700 mb-1">Breaking News Text</label>
+                    <textarea id="breaking_news_text" name="breaking_news_text" rows="2" maxlength="250"
+                           class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"></textarea>
+                    <p class="text-xs text-gray-500 mt-1">Max 250 characters. This text will appear in the breaking news banner.</p>
+                </div>
+                
+                <!-- Featured Image -->
+                <div class="md:col-span-2">
+                    <label for="featured_image" class="block text-sm font-medium text-gray-700 mb-1">Featured Image</label>
+                    <input type="file" id="featured_image" name="featured_image" accept="image/*"
+                           class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                    <p class="text-xs text-gray-500 mt-1">Upload an image file or use an image URL below</p>
+                </div>
+                
+                <!-- Featured Image URL -->
+                <div class="md:col-span-2">
+                    <label for="featured_image_url" class="block text-sm font-medium text-gray-700 mb-1">Featured Image URL</label>
+                    <input type="url" id="featured_image_url" name="featured_image_url" placeholder="https://example.com/image.jpg"
+                           class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    <p class="text-xs text-gray-500 mt-1">Alternative to uploaded image. Enter a URL to an external image.</p>
+                </div>
+            </div>
+            
+            <!-- Content -->
+            <div class="mb-6">
+                <label for="content" class="block text-sm font-medium text-gray-700 mb-1">Content *</label>
+                <textarea id="content" name="content" rows="10" required
+                          class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"></textarea>
+            </div>
+            
+            <!-- SEO Section -->
+            <div class="border-t pt-6 mb-6">
+                <h3 class="text-lg font-medium mb-4">SEO Settings</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Meta Description -->
+                    <div class="md:col-span-2">
+                        <label for="meta_description" class="block text-sm font-medium text-gray-700 mb-1">Meta Description</label>
+                        <textarea id="meta_description" name="meta_description" rows="2"
+                                  class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"></textarea>
+                        <p class="text-xs text-gray-500 mt-1">Recommended: 150-160 characters</p>
+                    </div>
+                    
+                    <!-- Meta Keywords -->
+                    <div class="md:col-span-2">
+                        <label for="meta_keywords" class="block text-sm font-medium text-gray-700 mb-1">Meta Keywords</label>
+                        <input type="text" id="meta_keywords" name="meta_keywords"
+                               class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        <p class="text-xs text-gray-500 mt-1">Comma-separated keywords</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex justify-between">
+                <a href="{% url 'dashboard:article_list' %}" class="bg-gray-300 text-gray-700 py-2 px-4 rounded-lg font-medium hover:bg-gray-400 transition duration-200">
+                    Cancel
+                </a>
+                <div>
+                    <button type="submit" name="save_draft" class="bg-gray-500 text-white py-2 px-4 rounded-lg font-medium hover:bg-gray-600 transition duration-200 mr-2">
+                        Save as Draft
+                    </button>
+                    <button type="submit" name="save_publish" class="btn-primary text-white py-2 px-4 rounded-lg font-medium hover:bg-indigo-600 transition duration-200">
+                        Publish
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // CKEditor initialization
+        ClassicEditor
+            .create(document.querySelector('#content'))
+            .catch(error => {
+                console.error(error);
+            });
+            
+        // Generate slug from title
+        const titleInput = document.getElementById('title');
+        const slugInput = document.getElementById('slug');
+        const generateSlugBtn = document.getElementById('generate-slug');
+        
+        // Initialize breaking news text visibility
+        toggleBreakingNewsText();
+    });
+    
+    // Function to toggle breaking news text field visibility
+    function toggleBreakingNewsText() {
+        const isBreakingNews = document.getElementById('is_breaking_news').checked;
+        const breakingNewsTextContainer = document.getElementById('breaking_news_text_container');
+        
+        if (isBreakingNews) {
+            breakingNewsTextContainer.classList.remove('hidden');
+        } else {
+            breakingNewsTextContainer.classList.add('hidden');
+        }
+    }
+        
+        function generateSlug(text) {
+            return text.toString().toLowerCase()
+                .replace(/\s+/g, '-')           // Replace spaces with -
+                .replace(/[^\w\-]+/g, '')       // Remove all non-word chars
+                .replace(/\-\-+/g, '-')         // Replace multiple - with single -
+                .replace(/^-+/, '')             // Trim - from start of text
+                .replace(/-+$/, '');            // Trim - from end of text
+        }
+        
+        generateSlugBtn.addEventListener('click', function() {
+            if (titleInput.value) {
+                slugInput.value = generateSlug(titleInput.value);
+            }
+        });
+        
+        titleInput.addEventListener('blur', function() {
+            if (titleInput.value && !slugInput.value) {
+                slugInput.value = generateSlug(titleInput.value);
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -10,6 +10,12 @@ from .models import Article, Category
 
 def home_view(request):
     """Homepage with latest and trending news"""
+    # Breaking news articles
+    breaking_news_articles = Article.objects.filter(
+        status='published', 
+        is_breaking_news=True
+    ).select_related('category', 'author').order_by('-published_at')
+    
     # Featured articles
     featured_articles = Article.objects.filter(
         status='published', 
@@ -34,6 +40,7 @@ def home_view(request):
     ).filter(article_count__gt=0)
     
     context = {
+        'breaking_news_articles': breaking_news_articles,
         'featured_articles': featured_articles,
         'latest_articles': latest_articles,
         'trending_articles': trending_articles,
