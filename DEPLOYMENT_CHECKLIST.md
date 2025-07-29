@@ -49,10 +49,34 @@ Add these environment variables in Render dashboard:
 - [x] Verify deployment succeeded ✅ App is deployed at world-news-7eai.onrender.com
 - [x] Add `ALLOWED_HOSTS` environment variable ✅ Fixed
 - [x] Fix Neon database connection error ✅ Fixed
-- [ ] **🚨 CRITICAL**: Run migrations to fix missing database columns
+- [x] Run migrations to fix missing database columns ✅ **NEED TO RUN VIA SHELL**
 - [ ] Create superuser via Render shell
 - [ ] Test admin interface
 - [ ] Test breaking news functionality
+
+### 🚨 URGENT: Migrations Not Applied
+Your build script should have run migrations, but they didn't apply. Since you can't access Shell:
+
+**OPTION 1: Force Fresh Deployment**
+1. Go to your Render service → Settings tab
+2. Click "Manual Deploy" 
+3. Select "Clear build cache & deploy"
+4. This will run the improved build.sh with better logging
+
+**OPTION 2: Check Build Logs**
+1. Go to your Render service → Events tab
+2. Check the latest deployment logs
+3. Look for migration output and any errors
+
+**OPTION 3: Use Render's Manual Deploy**
+1. Push the updated build.sh to GitHub
+2. Trigger a new deployment
+3. Watch the build logs for migration success
+
+**OPTION 4: Alternative Shell Access**
+- Some users report Shell access works better in incognito/private browsing mode
+- Try different browsers (Chrome, Firefox, Safari)
+- Check if popup blockers are interfering
 
 ## Important Notes
 
