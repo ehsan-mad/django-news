@@ -52,6 +52,7 @@ class Article(models.Model):
     show_breaking_image = models.BooleanField(default=False, help_text="Enable this option to display the article's image in the breaking news banner. If unchecked, only the text will be shown.")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    publication_date = models.DateTimeField(blank=True, null=True)
     published_at = models.DateTimeField(blank=True, null=True)
 
     class Meta:
@@ -71,9 +72,11 @@ class Article(models.Model):
         if not self.slug:
             self.slug = slugify(self.title)
         
-        # Set published_at when status changes to published
+        # Set published_at and publication_date when status changes to published
         if self.status == 'published' and not self.published_at:
-            self.published_at = timezone.now()
+            now = timezone.now()
+            self.published_at = now
+            self.publication_date = now
         
         # Generate excerpt from content if not provided
         if not self.excerpt and self.content:
@@ -89,13 +92,13 @@ class Article(models.Model):
 
     @property
     def is_published(self):
-        return self.status == 'published' and self.published_at
+        return self.status == 'published' and (self.published_at or self.publication_date)
 
     def get_related_articles(self, count=3):
         return Article.objects.filter(
             category=self.category,
             status='published'
-        ).exclude(id=self.id).order_by('-published_at')[:count]
+        ).exclude(id=self.id).order_by('-publication_date', '-published_at')[:count]
 
     def increment_views(self):
         """Increment article views count safely"""
