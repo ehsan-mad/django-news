@@ -55,28 +55,93 @@ Add these environment variables in Render dashboard:
 - [ ] Test breaking news functionality
 
 ### 🚨 URGENT: Migrations Not Applied
-Your build script should have run migrations, but they didn't apply. Since you can't access Shell:
+Your build script has been improved with better logging. Since you can't access Shell:
 
-**OPTION 1: Force Fresh Deployment**
-1. Go to your Render service → Settings tab
-2. Click "Manual Deploy" 
-3. Select "Clear build cache & deploy"
-4. This will run the improved build.sh with better logging
+**OPTION A: Manual Database Migration in Neon (RECOMMENDED)**
+1. Go to your Neon console: https://console.neon.tech
+2. Open your database: `neondb`
+3. Go to SQL Editor
+4. Run the SQL commands below to add missing columns
+5. This will bypass the Django migration system
 
-**OPTION 2: Check Build Logs**
-1. Go to your Render service → Events tab
-2. Check the latest deployment logs
-3. Look for migration output and any errors
+**OPTION B: Force Fresh Deployment**
+1. Go to your Render service dashboard: `world-news-7eai`
+2. Click **"Manual Deploy"** button
+3. Select **"Clear build cache & deploy"**
+4. **Watch the build logs** for migration output
 
-**OPTION 3: Use Render's Manual Deploy**
-1. Push the updated build.sh to GitHub
-2. Trigger a new deployment
-3. Watch the build logs for migration success
+**SQL Commands for Neon (Run in SQL Editor):**
+```sql
+-- Add missing columns to news_category table
+ALTER TABLE news_category ADD COLUMN IF NOT EXISTS slug VARCHAR(100);
+ALTER TABLE news_category ADD COLUMN IF NOT EXISTS description TEXT DEFAULT '';
 
-**OPTION 4: Alternative Shell Access**
-- Some users report Shell access works better in incognito/private browsing mode
-- Try different browsers (Chrome, Firefox, Safari)
-- Check if popup blockers are interfering
+-- Add unique constraint for slug (ignore if already exists)
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.table_constraints 
+        WHERE constraint_name = 'news_category_slug_unique'
+    ) THEN
+        ALTER TABLE news_category ADD CONSTRAINT news_category_slug_unique UNIQUE (slug);
+    END IF;
+END $$;
+
+-- Update existing categories with slug values
+UPDATE news_category SET slug = LOWER(REGEXP_REPLACE(TRIM(name), '[^a-zA-Z0-9]+', '-', 'g')) 
+WHERE slug IS NULL OR slug = '';
+
+-- Remove leading/trailing hyphens from slugs
+UPDATE news_category SET slug = TRIM(BOTH '-' FROM slug);
+
+-- Add missing Article columns
+ALTER TABLE news_article ADD COLUMN IF NOT EXISTS content TEXT DEFAULT '';
+ALTER TABLE news_article ADD COLUMN IF NOT EXISTS excerpt TEXT DEFAULT '';
+ALTER TABLE news_article ADD COLUMN IF NOT EXISTS slug VARCHAR(200);
+ALTER TABLE news_article ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'draft';
+ALTER TABLE news_article ADD COLUMN IF NOT EXISTS views_count INTEGER DEFAULT 0;
+ALTER TABLE news_article ADD COLUMN IF NOT EXISTS is_featured BOOLEAN DEFAULT FALSE;
+ALTER TABLE news_article ADD COLUMN IF NOT EXISTS is_breaking_news BOOLEAN DEFAULT FALSE;
+ALTER TABLE news_article ADD COLUMN IF NOT EXISTS breaking_news_text VARCHAR(250) DEFAULT '';
+ALTER TABLE news_article ADD COLUMN IF NOT EXISTS show_breaking_image BOOLEAN DEFAULT FALSE;
+ALTER TABLE news_article ADD COLUMN IF NOT EXISTS featured_image_url VARCHAR(500);
+ALTER TABLE news_article ADD COLUMN IF NOT EXISTS published_at TIMESTAMP;
+
+-- Add unique constraint for article slug (ignore if already exists)
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.table_constraints 
+        WHERE constraint_name = 'news_article_slug_unique'
+    ) THEN
+        ALTER TABLE news_article ADD CONSTRAINT news_article_slug_unique UNIQUE (slug);
+    END IF;
+END $$;
+
+-- Update existing articles with slug values
+UPDATE news_article SET slug = LOWER(REGEXP_REPLACE(TRIM(title), '[^a-zA-Z0-9]+', '-', 'g')) 
+WHERE slug IS NULL OR slug = '';
+
+-- Check that all tables and columns exist
+SELECT table_name, column_name, data_type 
+FROM information_schema.columns 
+WHERE table_name IN ('news_category', 'news_article') 
+ORDER BY table_name, column_name;
+```
+
+**After running these SQL commands:**
+1. Your website should work at: https://world-news-7eai.onrender.com
+2. All database schema issues will be resolved
+3. You can create categories and articles normally
+
+**The improved build script will now:**
+- ✅ Test database connection first
+- ✅ Show which migrations need to be applied
+- ✅ Run migrations with verbose output
+- ✅ Show exactly where any errors occur
+
+**After successful deployment, your site should work at:**
+https://world-news-7eai.onrender.com
 
 ## Important Notes
 
